@@ -7,20 +7,24 @@ public class MiteAI : MonoBehaviour
     
     public float boxRadius;
     [SerializeField]
-    float viewDistance = 1f;
+    float viewDistance = .1f;
     [SerializeField]
-    int viewAngle = 180;
+    int viewAngle = 80;
     [SerializeField]
-    float speed = .01f;
+    float speed = 1f;
     [SerializeField]
     float avoidancePow = .01f;
     [SerializeField]
     float alignmentPow = .01f;
     [SerializeField]
-    float cohesionPow = .01f;
+    float targetFollowPow;
+    [SerializeField]
+    float cohesionPow = .1f;
     Vector3 positions;
+    GameObject closestTarget;
     List<GameObject> listOfBoids = new List<GameObject>();
     List<GameObject> visableBoids = new List<GameObject>();
+    List<GameObject> boidTargets = new List<GameObject>();
     Rigidbody rb;
 
     private void Awake() {
@@ -28,6 +32,7 @@ public class MiteAI : MonoBehaviour
             updateBoidsList();
         }
         rb = GetComponent<Rigidbody>();
+        closestTarget = this.gameObject;
     }
     private void FixedUpdate() {
         // clear the list of visable boids each frame
@@ -49,29 +54,50 @@ public class MiteAI : MonoBehaviour
 
         //* for each visible boid, apply the three rules
         // AVOIDANCE
-        // foreach (GameObject boid in visableBoids)
-        // {
-        //     Vector3 lookingAway;
-        //     lookingAway = transform.position + transform.position - boid.transform.position;
-        //     transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.FromToRotation(transform.forward, lookingAway), avoidancePow);
-        // }
+        foreach (GameObject boid in visableBoids)
+        {
+            Vector3 lookingAway = transform.position - boid.transform.position;
+            float distToBoid =  (5/ Vector3.Distance(this.transform.position, boid.transform.position));
+
+            Quaternion targetRotation = Quaternion.FromToRotation(transform.forward, lookingAway) * transform.rotation;
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, distToBoid * avoidancePow);
+        }
 
         // ALLIGNMENT
-        // foreach (GameObject boid in visableBoids){
-        //     transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.FromToRotation(transform.forward, boid.transform.forward), alignmentPow);
-        // }
+        foreach (GameObject boid in visableBoids){
+            Quaternion targetRotation = boid.transform.rotation;
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, alignmentPow);
+        }
 
         // COHESION
+        // calculate the average pos of visBoids
         positions = Vector3.zero;
         if (visableBoids.Count != 0){
             foreach(GameObject boid in visableBoids){
             positions += boid.transform.position;
             }
-        positions /= visableBoids.Count;
-        Vector3 vectorToPositons = transform.position + transform.position - positions ;
-        transform.rotation = Quaternion.Lerp(transform.rotation, transform.rotation *Quaternion.FromToRotation(transform.forward, transform.position + vectorToPositons), cohesionPow);
+            positions /= visableBoids.Count;
+
+            // Point toward the avg pos 
+            Vector3 vToPos = positions - transform.position;
+            Quaternion targetRotation = Quaternion.FromToRotation(transform.forward, vToPos) * transform.rotation;
+            float strengthToCoh = (Vector3.Magnitude(vToPos)*2) + 1;
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, strengthToCoh * cohesionPow);
         }
-        
+
+        // TARGET FOLLOWING
+        boidTargets.Clear();
+        foreach (GameObject target in GameObject.FindGameObjectsWithTag("BoidTarget"))
+        {
+            boidTargets.Add(target);
+            if (closestTarget == this.gameObject || Vector3.Distance(transform.position, target.transform.position) < Vector3.Distance(transform.position, closestTarget.transform.position))
+            {
+                closestTarget = target;
+            }
+        }
+        Vector3 vectorToTarget = closestTarget.transform.position - transform.position;
+        Quaternion rotationToTarget = Quaternion.FromToRotation(transform.forward, vectorToTarget) * transform.rotation;
+        transform.rotation = Quaternion.Lerp(transform.rotation, rotationToTarget, targetFollowPow);
         // move forward
         rb.AddForce(transform.forward * Time.deltaTime * speed);
         
@@ -104,17 +130,19 @@ public class MiteAI : MonoBehaviour
         Gizmos.DrawWireCube(new Vector3(0,0,0), new Vector3(boxRadius * 2,boxRadius * 2,boxRadius * 2));
         Gizmos.color = Color.gray;
         Gizmos.DrawWireSphere(transform.position, viewDistance);
-        
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position,transform.position + positions - transform.position);
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(positions, .5f);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(this.transform.position, closestTarget.transform.position);
         foreach (GameObject bio in visableBoids)
         {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(bio.transform.position, .1f);
+            Gizmos.DrawWireSphere(bio.transform.position, .05f);
             Gizmos.color = Color.green;
             Gizmos.DrawLine(transform.position, bio.transform.position);
             Gizmos.color = Color.magenta;
             Gizmos.DrawLine(transform.position, transform.position+  transform.position - bio.transform.position);
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(positions, .5f);
         }
         // Gizmos.color = Color.gray;
         // foreach (GameObject bio in listOfBoids)
