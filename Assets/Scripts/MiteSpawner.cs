@@ -10,6 +10,7 @@ public class MiteSpawner : MonoBehaviour
     Vector3 position;
     Quaternion rotation;
     float boxRadius;
+    float updateTimer = 20; 
     private void Start() {
         boxRadius = mites.GetComponent<MiteAI>().boxRadius;
         Component aiScript = mites.GetComponent<MiteAI>();
@@ -19,7 +20,20 @@ public class MiteSpawner : MonoBehaviour
             position = new Vector3(Random.Range(-boxRadius, boxRadius), Random.Range(-boxRadius, boxRadius), Random.Range(-boxRadius, boxRadius));
             rotation = Quaternion.Euler(Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f));
             Instantiate(mites, position, rotation);
+            UpdateMites();
+        }   
+    }
+
+    private void FixedUpdate() {
+        updateTimer-= Time.deltaTime;
+        if (updateTimer < 1)
+        {
+            UpdateMites();
+            updateTimer = 20;
         }
+    }
+    public void UpdateMites ()
+    {
         GameObject[] mitesToUpdate = GameObject.FindGameObjectsWithTag("Boid");
         foreach (GameObject bitch in mitesToUpdate)
         {

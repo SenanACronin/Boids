@@ -11,46 +11,65 @@ public class FibbanacciPoints : MonoBehaviour
     [SerializeField]
     float pow = 1;
     [SerializeField]
+    int highlightVector = 1;
+    [SerializeField]
     [Range(0f, 2f)]
     float turnFraction = 1.6180339f;
     [SerializeField]
     int numberOfPoints = 200;
     public float viewAngle;
-    private void OnDrawGizmosSelected() {
-        if(!isSphere)
-        {
-            Gizmos.color = Color.cyan;
-            foreach (Vector3 point in GeneratePointsOnDisk(numberOfPoints, turnFraction, pow))
-            {
-                Gizmos.DrawSphere(point, 1f);
-            }
-        }
-        else
-        {
-            if (!visualiseVectors)
-            {
-                Gizmos.color = Color.green;
-                foreach (Vector3 point in GeneratePointsOnSphere(numberOfPoints, turnFraction, pow))
-                {
-                    Gizmos.DrawSphere(point *10, 1f);
-                }
-            }
-            else
-            {
-                Gizmos.color = Color.green;
-                foreach (Vector3 point in GeneratePointsOnSphere(numberOfPoints, turnFraction, pow))
-                {
-                    if(Vector3.Angle(Vector3.forward, point) > viewAngle)
-                    {
-                        Gizmos.color = Color.red;
-                    }
-                    Gizmos.DrawLine(Vector3.zero, point);
-                }
-            }
-        }
-    }
 
-    private Vector3[] GeneratePointsOnSphere (int NumberOfPoints, float TurnFraction, float Pow)
+    //* visualisation w/ gizmos
+
+    // private void OnDrawGizmosSelected() {
+    //     if(!isSphere)
+    //     {
+    //         Gizmos.color = Color.cyan;
+    //         foreach (Vector3 point in GeneratePointsOnDisk(numberOfPoints, turnFraction, pow))
+    //         {
+    //             Gizmos.DrawSphere(point, 1f);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         if (!visualiseVectors)
+    //         {
+    //             Gizmos.color = Color.green;
+    //             foreach (Vector3 point in GeneratePointsOnSphere(numberOfPoints, turnFraction, pow, viewAngle))
+    //             {
+    //                 Gizmos.DrawSphere(point *10, 1f);
+    //             }
+    //         }
+    //         else
+    //         {
+    //             int currentPoint = 0;
+    //             foreach (Vector3 point in GeneratePointsOnSphere(numberOfPoints, turnFraction, pow, viewAngle))
+    //             {
+    //                 Gizmos.color = Color.green;
+    //                 if(Vector3.Angle(Vector3.forward, point) > viewAngle)
+    //                 {
+    //                     Gizmos.color = Color.red;
+    //                 }
+    //                 if (currentPoint == highlightVector)
+    //                 {
+    //                     Gizmos.color = Color.magenta;
+    //                 }
+    //                 Gizmos.DrawLine(Vector3.zero, point);
+    //                 currentPoint++;
+    //             }
+    //         }
+    //     }
+    // }
+    
+    /// <summary>
+    /// Generates a list of vectors 
+    /// </summary>
+    /// <param name="NumberOfPoints"></param>
+    /// <param name="TurnFraction"></param>
+    /// <param name="Pow"></param>
+    /// <param name="ViewAngle"></param>
+    /// <returns></returns>
+    public List<Vector3> GeneratePointsOnSphere (int NumberOfPoints, float Pow, float ViewAngle,  float TurnFraction = 1.61803f)
     {
         Vector3[] pointsGenerated = new Vector3[numberOfPoints];
         for (int i = 0; i < numberOfPoints; i++)
@@ -62,12 +81,20 @@ public class FibbanacciPoints : MonoBehaviour
             float x = Mathf.Sin(inclination)* Mathf.Cos(theta);
             float y = Mathf.Sin(inclination)* Mathf.Sin(theta);
             float z = Mathf.Cos(inclination);
-
-            pointsGenerated[i] = new Vector3(x, y, z);
+            Vector3 point = new Vector3(x, y, z);
+            
+            pointsGenerated[i] = point;
 
         }
-
-        return pointsGenerated;
+        List<Vector3> pointsInView = new List<Vector3>();
+        foreach (Vector3 point in pointsGenerated)
+        {
+            if (Vector3.Angle(Vector3.forward, point) < viewAngle)
+            {
+                pointsInView.Add(point);
+            }
+        }
+        return pointsInView;
 
     }
     /// <summary>

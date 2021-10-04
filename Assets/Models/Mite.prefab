@@ -137,6 +137,100 @@ TrailRenderer:
   m_MinVertexDistance: 0.2
   m_Autodestruct: 1
   m_Emitting: 1
+--- !u!1 &4678476233263323694
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7375943604552411202}
+  - component: {fileID: 3072588019360918550}
+  - component: {fileID: 4112858788312189726}
+  - component: {fileID: 8839356297688621223}
+  m_Layer: 0
+  m_Name: Cylinder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7375943604552411202
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4678476233263323694}
+  m_LocalRotation: {x: 0.7071219, y: -0, z: -0, w: 0.7070917}
+  m_LocalPosition: {x: 0.0000011870001, y: -0.00000004942749, z: 0.533}
+  m_LocalScale: {x: 0.2976193, y: 0.2976193, z: 0.2976193}
+  m_Children: []
+  m_Father: {fileID: 1304833985939031799}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 90.00001, y: 0, z: 0}
+--- !u!33 &3072588019360918550
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4678476233263323694}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &4112858788312189726
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4678476233263323694}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: fa89ed43dff5a4946aa8d9c38ec7e152, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!136 &8839356297688621223
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4678476233263323694}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.50000024
+  m_Height: 2.0000005
+  m_Direction: 1
+  m_Center: {x: 0.00000005960466, y: 0, z: -0.00000008940699}
 --- !u!1 &6120884832327620711
 GameObject:
   m_ObjectHideFlags: 0
@@ -151,6 +245,7 @@ GameObject:
   - component: {fileID: 5167819830394084698}
   - component: {fileID: 3021854764127557148}
   - component: {fileID: -2193990420364301979}
+  - component: {fileID: 408526440799509619}
   m_Layer: 0
   m_Name: Mite
   m_TagString: Boid
@@ -167,9 +262,10 @@ Transform:
   m_GameObject: {fileID: 6120884832327620711}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.049476095, y: 0.049476095, z: 0.049476095}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_Children:
   - {fileID: 7468565074478868662}
+  - {fileID: 7375943604552411202}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -246,13 +342,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boxRadius: 1
-  viewDistance: 1
+  obstacles:
+    serializedVersion: 2
+    m_Bits: 0
+  sphereRadius: 0
+  viewDistance: 3
   viewAngle: 80
   speed: 100
-  avoidancePow: 0.01
-  alignmentPow: 0.1
+  avoidancePow: 0.15
+  alignmentPow: 0.01
   targetFollowPow: 0.005
-  cohesionPow: 0.1
+  obstacleAvoidancePow: 0.5
+  cohesionPow: 0.18
 --- !u!54 &-2193990420364301979
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -269,3 +370,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &408526440799509619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6120884832327620711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80985b8f4fb0602469f3c6db81817d39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isSphere: 1
+  visualiseVectors: 1
+  pow: -1
+  highlightVector: 0
+  turnFraction: 1.6180339
+  numberOfPoints: 400
+  viewAngle: 80

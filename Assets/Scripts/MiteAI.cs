@@ -1,11 +1,15 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class MiteAI : MonoBehaviour
 {
-    
+
     public float boxRadius;
+    public LayerMask obstacles;
+    [SerializeField]
+    float sphereRadius;
     [SerializeField]
     float viewDistance = .1f;
     [SerializeField]
@@ -19,20 +23,36 @@ public class MiteAI : MonoBehaviour
     [SerializeField]
     float targetFollowPow;
     [SerializeField]
+    float obstacleAvoidancePow = .5f;
+    [SerializeField]
     float cohesionPow = .1f;
-    Vector3 positions;
+    Vector3 averageBoidPositions;
     GameObject closestTarget;
+    GameObject controller;
     List<GameObject> listOfBoids = new List<GameObject>();
     List<GameObject> visableBoids = new List<GameObject>();
     List<GameObject> boidTargets = new List<GameObject>();
+    List<Vector3> visionVectors;
     Rigidbody rb;
 
+
     private void Awake() {
-        if (GameObject.FindGameObjectsWithTag("GameController").Length == 0 ){
+        controller = GameObject.FindGameObjectWithTag("GameController");
+        if (controller != null )
+        {
             updateBoidsList();
         }
+        
         rb = GetComponent<Rigidbody>();
+
         closestTarget = this.gameObject;
+
+        visionVectors = gameObject.GetComponent<FibbanacciPoints>().GeneratePointsOnSphere(400, -1, viewAngle);
+        
+        // if (Time.time > 2)
+        // {
+        //     controller.GetComponent<MiteSpawner>().UpdateMites();
+        // }
     }
     private void FixedUpdate() {
         // clear the list of visable boids each frame
@@ -57,7 +77,7 @@ public class MiteAI : MonoBehaviour
         foreach (GameObject boid in visableBoids)
         {
             Vector3 lookingAway = transform.position - boid.transform.position;
-            float distToBoid =  (5/ Vector3.Distance(this.transform.position, boid.transform.position));
+            float distToBoid =  (1f/ Vector3.Distance(this.transform.position, boid.transform.position));
 
             Quaternion targetRotation = Quaternion.FromToRotation(transform.forward, lookingAway) * transform.rotation;
             transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, distToBoid * avoidancePow);
@@ -66,20 +86,21 @@ public class MiteAI : MonoBehaviour
         // ALLIGNMENT
         foreach (GameObject boid in visableBoids){
             Quaternion targetRotation = boid.transform.rotation;
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, alignmentPow);
+            float distToBoid = (1f / Vector3.Distance(this.transform.position, boid.transform.position));
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, distToBoid* alignmentPow);
         }
 
         // COHESION
         // calculate the average pos of visBoids
-        positions = Vector3.zero;
+        averageBoidPositions = Vector3.zero;
         if (visableBoids.Count != 0){
             foreach(GameObject boid in visableBoids){
-            positions += boid.transform.position;
+                averageBoidPositions += boid.transform.position;
             }
-            positions /= visableBoids.Count;
+            averageBoidPositions /= visableBoids.Count;
 
             // Point toward the avg pos 
-            Vector3 vToPos = positions - transform.position;
+            Vector3 vToPos = averageBoidPositions - transform.position;
             Quaternion targetRotation = Quaternion.FromToRotation(transform.forward, vToPos) * transform.rotation;
             float strengthToCoh = (Vector3.Magnitude(vToPos)*2) + 1;
             transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, strengthToCoh * cohesionPow);
@@ -98,6 +119,15 @@ public class MiteAI : MonoBehaviour
         Vector3 vectorToTarget = closestTarget.transform.position - transform.position;
         Quaternion rotationToTarget = Quaternion.FromToRotation(transform.forward, vectorToTarget) * transform.rotation;
         transform.rotation = Quaternion.Lerp(transform.rotation, rotationToTarget, targetFollowPow);
+
+        //TODO
+        // add obstacle avoidance 
+        Vector3 bestDir = this.transform.position + FindUnobstructedDirection(visionVectors, sphereRadius);
+        
+        Quaternion r = Quaternion.FromToRotation(transform.forward, vectorToTarget) * transform.rotation;
+        //transform.rotation = Quaternion.Lerp(transform.rotation, r, obstacleAvoidancePow);
+        
+
         // move forward
         rb.AddForce(transform.forward * Time.deltaTime * speed);
         
@@ -125,17 +155,42 @@ public class MiteAI : MonoBehaviour
         // }
 
     }
+
+    private Vector3 FindUnobstructedDirection(List<Vector3> rays, float sphereRadius)
+    {
+        Vector3 bestDir = transform.forward;
+        float furthestDist = 0;
+        RaycastHit hit;
+
+        foreach (Vector3 v in rays)
+        {
+            Vector3 dir = transform.TransformDirection(v);
+            if (Physics.SphereCast(transform.position, sphereRadius, dir, out hit, viewDistance, obstacles))
+            {
+                if (hit.distance > furthestDist)
+                {
+                    bestDir = dir;
+                    furthestDist = hit.distance;
+                }
+            }
+            else
+            {
+                return dir;
+            }
+        }
+        return bestDir;
+    }
+
     private void OnDrawGizmosSelected() {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(new Vector3(0,0,0), new Vector3(boxRadius * 2,boxRadius * 2,boxRadius * 2));
         Gizmos.color = Color.gray;
         Gizmos.DrawWireSphere(transform.position, viewDistance);
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(transform.position,transform.position + positions - transform.position);
+        Gizmos.DrawLine(transform.position,transform.position + averageBoidPositions - transform.position);
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(positions, .5f);
+        Gizmos.DrawWireSphere(averageBoidPositions, .2f);
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(this.transform.position, closestTarget.transform.position);
+        Gizmos.DrawLine(this.transform.position, this.transform.position + FindUnobstructedDirection(visionVectors, sphereRadius));
         foreach (GameObject bio in visableBoids)
         {
             Gizmos.DrawWireSphere(bio.transform.position, .05f);
@@ -150,30 +205,8 @@ public class MiteAI : MonoBehaviour
         //     Gizmos.DrawLine(transform.position, bio.transform.position);
         // }
     }
-    /// <summary>
-    /// Generates an array of Vector3 points in space that lie on sphere, with spacing defined by the golden ratio
-    /// </summary>
-    /// <param name="numPoints"></param>
-    /// <returns></returns>
-    // TODO make this work at all
-        private Vector3[] GeneratePointsFibonacci(int numPoints){
-            Vector3[] points = new Vector3[numPoints];
-            double phi = System.Math.PI * (3 - System.Math.Sqrt(5));  //golden angle in radians
-
-            for (int i = 0; i < numPoints; i++)
-            {
-                float y = 1 - (i / numPoints - 1) * 2;
-                float radiuis = (float)System.Math.Sqrt(1 - y * y);
-
-                double theta = phi * i;
-
-                float x = (float)System.Math.Cos(theta) * radiuis;
-                float z = (float)System.Math.Sin(theta) * radiuis;
-
-                points[i] = new Vector3(x, y, z);
-            }
-            return points;
-    }
+    
+        
     
     /// <summary>
     /// Updates the listOfBoids variable on the available object
